@@ -1,16 +1,18 @@
+using System;
 using UnityEngine;
 using Unity.Services.Friends;
-// using Sirenix.OdinInspector;
 using Unity.Services.Friends.Notifications;
-using System;
 using Unity.Services.Friends.Models;
 using System.Threading.Tasks;
 using Unity.Services.Authentication;
 
+
 public class FriendsManager : MonoBehaviour
-{   
+{
+   
     void Start()
     {
+        
     }
 
     public async Task InitializeFriends()
@@ -21,47 +23,46 @@ public class FriendsManager : MonoBehaviour
         FriendsService.Instance.RelationshipDeleted += OnRelationshipDeleted;
         FriendsService.Instance.MessageReceived += OnMessageRecived;
         FriendsService.Instance.PresenceUpdated += OnPresenceUpdated;
+
     }
+    #region Methods
 
     public async void SendFriendRequest(string playerId)
     {
         await FriendsService.Instance.AddFriendAsync(playerId);
     }
-    
+
     public async void AddFriendByName(string username)
     {
         await FriendsService.Instance.AddFriendByNameAsync(username);
     }
 
-    public async void AcceptFriendRequest(string playerId)
-    {
-        await FriendsService.Instance.AddFriendAsync(playerId);
-    }
-    
     public async void BlockUser(string playerId)
     {
         await FriendsService.Instance.AddBlockAsync(playerId);  
     }
-    
+
     public async void UnblockUser(string playerId)
     {
         await FriendsService.Instance.DeleteBlockAsync(playerId);
     }
- 
+
     public async void DeleteFriend(string playerId)
     {
         await FriendsService.Instance.DeleteFriendAsync(playerId);
     }
-    
+
     public async void DeleteIncomingRequest(string playerId)
     {
         await FriendsService.Instance.DeleteIncomingFriendRequestAsync(playerId);
     }
-    
+
     public async void DeleteOutgoingRequest(string playerId)
     {
         await FriendsService.Instance.DeleteOutgoingFriendRequestAsync(playerId);
     }
+    #endregion
+    #region Helpers
 
     public void ShowFriends()
     {
@@ -73,25 +74,39 @@ public class FriendsManager : MonoBehaviour
 
     public void ShowIncoming()
     {
-        foreach (Relationship rel in FriendsService.Instance.IncomingFriendRequests) {
+        foreach (Relationship rel in FriendsService.Instance.IncomingFriendRequests)
+        {
             Debug.Log(rel.Member.Id + " ||" + rel.Member.Presence.Availability);
+
+           // SendFriendRequest(rel.Member.Id);
         }
+
+        
     }
-    
+
     public void ShowOutgoing()
     {
-        foreach (Relationship rel in FriendsService.Instance.OutgoingFriendRequests) {
+        foreach (Relationship rel in FriendsService.Instance.OutgoingFriendRequests)
+        {
             Debug.Log(rel.Member.Id + " ||" + rel.Member.Presence.Availability);
+
+            // SendFriendRequest(rel.Member.Id);
         }
     }
-    
+
     public void ShowBlocks()
     {
-        foreach (Relationship rel in FriendsService.Instance.Blocks) {
+        foreach (Relationship rel in FriendsService.Instance.Blocks)
+        {
             Debug.Log(rel.Member.Id + " ||" + rel.Member.Presence.Availability);
+
+           // UnblockUser(rel.Member.Id);
         }
     }
-    
+
+    #endregion
+    #region Status
+
     public async void SetAvailability(Availability availability)
     {
         await FriendsService.Instance.SetPresenceAvailabilityAsync(availability);
@@ -124,6 +139,9 @@ public class FriendsManager : MonoBehaviour
         await FriendsService.Instance.SetPresenceAsync(availability, activity);
     }
 
+    #endregion
+    #region Message
+
     public class LobbyInviteMessage
     {
         public string lobbyId;
@@ -137,7 +155,7 @@ public class FriendsManager : MonoBehaviour
 
         public SimpleMessage() { }
     }
-    
+
     public async Task SendMessage(string targetID , string text)
     {
         var msg = new SimpleMessage();
@@ -159,6 +177,9 @@ public class FriendsManager : MonoBehaviour
         Debug.Log("Invitacion a lobby enviada");
     }
 
+
+    #endregion
+    #region Events
     private void OnPresenceUpdated(IPresenceUpdatedEvent e)
     {
         Debug.Log("Se a actualizado es estado de" + e.ID + e.Presence.Availability);
@@ -166,16 +187,27 @@ public class FriendsManager : MonoBehaviour
 
     private void OnMessageRecived(IMessageReceivedEvent e)
     {
+
+        //e.GetAs<>
+        
+
         LobbyInviteMessage invite = null;
-        try {
+
+
+        try
+        {
             invite = e.GetAs<LobbyInviteMessage>();
-        } catch { 
+        }
+        catch 
+        { 
             var msg = e.GetAs<SimpleMessage>();
             Debug.Log("he recibido un mensaje de " + e.UserId + "mensaje : " + msg.content);
 
         }
-        if (invite == null)
-            return;
+        if (invite == null) return;
+
+        //-> LobbyJoinByCode(invite.JoinCode)
+
     }
 
     private void OnRelationshipDeleted(IRelationshipDeletedEvent e)
@@ -187,4 +219,5 @@ public class FriendsManager : MonoBehaviour
     {
         Debug.Log("Relationship added : " + e.Relationship.Id + e.Relationship.Type);
     }
+    #endregion
 }

@@ -3,7 +3,7 @@ using UnityEngine.InputSystem;
 
 public class MachineMovementController : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 10f;
+    [SerializeField] private float moveSpeed = 50f;
 
     private InputSystem_Actions inputActions;
 

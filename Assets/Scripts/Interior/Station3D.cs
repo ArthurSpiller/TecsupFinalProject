@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 public class Station3D : MonoBehaviour
 {
     public StationType stationType;
+
     [HideInInspector] public Camera stationCamera;
     [HideInInspector] public bool isOccupied;
     [HideInInspector] public PlayerStationHandler currentUser;
@@ -11,7 +12,7 @@ public class Station3D : MonoBehaviour
     private bool playerInRange;
     private PlayerStationHandler nearbyHandler;
     private InputSystem_Actions inputActions;
-
+    
     private void Awake()
     {
         inputActions = new InputSystem_Actions();
@@ -42,8 +43,10 @@ public class Station3D : MonoBehaviour
         }
     }
 
-    private void OnInteract(InputAction.CallbackContext ctx) {
-        if (playerInRange && !isOccupied && nearbyHandler) {
+    private void OnInteract(InputAction.CallbackContext ctx) 
+    {
+        if (playerInRange && !isOccupied && nearbyHandler)
+        {
             isOccupied = true;
             currentUser = nearbyHandler;
             nearbyHandler.EnterStation(this);

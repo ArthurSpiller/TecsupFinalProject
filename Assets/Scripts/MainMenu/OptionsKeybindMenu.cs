@@ -37,7 +37,9 @@ public class OptionsKeybindMenu : MonoBehaviour
         {
             actions.Player.Move,
             actions.Player.Interact,
-            actions.Player.ExitStation
+            actions.Player.ExitStation,
+            actions.Player.Look,
+            actions.Player.Fire
         };
 
         foreach (var action in playerActions)

@@ -48,6 +48,12 @@ public class PlayerStationHandler : MonoBehaviour
 
         if (station.stationType == StationType.Movement) {
             GameManager.Instance.exteriorManager.SetMachineControl(true);
+        } else if (station.stationType == StationType.Firing) {
+            GameManager.Instance.exteriorManager.SetMachineFiring(true);
+            print("jaj");
+        } else if (station.stationType == StationType.Lookout) {
+            GameManager.Instance.exteriorManager.SetMachineLookout(true);
+            print("joj");
         }
     }
 
@@ -56,9 +62,16 @@ public class PlayerStationHandler : MonoBehaviour
             if (currentStation.stationCamera)
                 currentStation.stationCamera.enabled = false;
 
-            if (currentStation.stationType == StationType.Movement)
+            if (currentStation.stationType == StationType.Movement) {
                 GameManager.Instance.exteriorManager.SetMachineControl(false);
-
+            } else if (currentStation.stationType == StationType.Firing) {
+                GameManager.Instance.exteriorManager.SetMachineFiring(false);
+                print("!jaj");
+            } else if (currentStation.stationType == StationType.Lookout) {
+                GameManager.Instance.exteriorManager.SetMachineLookout(false);
+                print("!joj");
+            }
+            
             currentStation.Release();
             currentStation = null;
         }

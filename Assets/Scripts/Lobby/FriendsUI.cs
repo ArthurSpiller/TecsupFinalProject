@@ -1,121 +1,183 @@
-using System;
-using System.Threading.Tasks;
 using UnityEngine;
+using TMPro;
 using UnityEngine.UI;
-using Unity.Services.Friends;
+using System.Collections.Generic;
 using Unity.Services.Friends.Models;
+using Unity.Services.Friends;
 using Unity.Services.Friends.Notifications;
 using Unity.Services.Authentication;
-using TMPro;
 
 public class FriendsUI : MonoBehaviour
 {
     [Header("References")]
     public FriendsManager friendsManager;
+    public GameObject preLobbyPanel;
+    public Button backButton;
 
-    [Header("UI Fields")]
-    public TMP_InputField addFriendInput;
-    public Button sendRequestButton;
+    [Header("Add Friend")]
+    public TMP_InputField usernameInput;
+    public Button addFriendButton;
 
-    public Transform friendsContainer;
-    public Transform incomingContainer;
+    [Header("Sections")]
+    public Transform friendsListContainer;
+    public Transform incomingListContainer;
+    public Transform outgoingListContainer;
+    public Transform blocksListContainer;
 
     public GameObject friendEntryPrefab;
-    public GameObject requestEntryPrefab;
-    
-    private async void OnEnable()
+
+    [Header("Refresh")]
+    public Button refreshFriendsButton;
+
+    [Header("Presence/Activity")]
+    public TMP_Dropdown availabilityDropdown;
+    public Button setAvailabilityButton;
+
+    private async void Start()
     {
         await friendsManager.InitializeFriends();
-        Debug.Log("PLAYER ID = " + AuthenticationService.Instance.PlayerId);
-        Debug.Log("PLAYER NAME = " + AuthenticationService.Instance.PlayerName);
-        sendRequestButton.onClick.AddListener(OnSendFriendRequest);
 
-        FriendsService.Instance.RelationshipAdded += OnRelationshipsAdded;
-        FriendsService.Instance.RelationshipDeleted += OnRelationshipsDeleted;
-        FriendsService.Instance.PresenceUpdated += OnPresenceChanged;
+        addFriendButton.onClick.AddListener(OnAddFriendClicked);
+        refreshFriendsButton.onClick.AddListener(PopulateAllLists);
+        backButton.onClick.AddListener(OnBackButtonClicked);
 
-        RefreshAll();
+        setAvailabilityButton.onClick.AddListener(OnSetAvailability);
+
+        availabilityDropdown.ClearOptions();
+        availabilityDropdown.AddOptions(new List<string> { "Online", "Busy", "Away", "Offline" });
+
+        PopulateAllLists();
     }
 
-    private void OnDisable()
-    {
-        sendRequestButton.onClick.RemoveListener(OnSendFriendRequest);
-
-        FriendsService.Instance.RelationshipAdded -= OnRelationshipsAdded;
-        FriendsService.Instance.RelationshipDeleted -= OnRelationshipsDeleted;
-        FriendsService.Instance.PresenceUpdated -= OnPresenceChanged;
+    private void OnBackButtonClicked() {
+        gameObject.SetActive(false);
+        preLobbyPanel.SetActive(true);
     }
 
-    private void OnSendFriendRequest()
+    private void OnAddFriendClicked()
     {
-        string input = addFriendInput.text.Trim();
-        if (string.IsNullOrEmpty(input)) return;
-
-        friendsManager.AddFriendByName(input);
-        addFriendInput.text = "";
+        string username = usernameInput.text.Trim();
+        if (username.Length > 0)
+            friendsManager.AddFriendByName(username);
     }
 
-    private void OnRelationshipsAdded(IRelationshipAddedEvent evt)  => RefreshAll();
-    private void OnRelationshipsDeleted(IRelationshipDeletedEvent evt) => RefreshAll();
-    private void OnPresenceChanged(IPresenceUpdatedEvent evt) => RefreshAll();
-
-    private void RefreshAll()
+    private void OnSetAvailability()
     {
-        RefreshFriends();
-        RefreshIncoming();
+        Availability selected = (Availability)availabilityDropdown.value;
+        friendsManager.SetAvailability(selected);
     }
 
-    private void RefreshFriends()
+    private void PopulateAllLists()
     {
-        foreach (Transform child in friendsContainer)
-            Destroy(child.gameObject);
+        Clear(friendsListContainer);
+        Clear(incomingListContainer);
+        Clear(outgoingListContainer);
+        Clear(blocksListContainer);
 
+        PopulateFriendsList();
+        PopulateIncomingList();
+        PopulateOutgoingList();
+        PopulateBlocksList();
+    }
+
+    private void PopulateFriendsList()
+    {
         foreach (Relationship rel in FriendsService.Instance.Friends)
         {
-            GameObject entry = Instantiate(friendEntryPrefab, friendsContainer);
+            GameObject entry = Instantiate(friendEntryPrefab, friendsListContainer);
+            
+            string name = rel.Member.Id;
+            string availability = rel.Member.Presence.Availability.ToString();
 
-            TMP_Text nameText = entry.transform.Find("FriendName").GetComponent<TMP_Text>();
-            TMP_Text statusText = entry.transform.Find("FriendStatus").GetComponent<TMP_Text>();
-            Button removeFriendButton = entry.transform.Find("RemoveFriend").GetComponent<Button>();
+            entry.transform.Find("PlayerNameText").GetComponent<TMP_Text>().text = name;
+            entry.transform.Find("AvailabilityText").GetComponent<TMP_Text>().text = availability;
 
-            string id = rel.Member.Id;
-            nameText.text = id;
+            // Buttons
+            Button removeBtn = entry.transform.Find("ActionButton2").GetComponent<Button>();
 
-            string availability = rel.Member.Presence != null ?
-                rel.Member.Presence.Availability.ToString() : "Offline";
 
-            statusText.text = availability;
-            removeFriendButton.onClick.AddListener(() => {
-                friendsManager.DeleteFriend(id);
-                RefreshAll();
+            removeBtn.GetComponentInChildren<TMP_Text>().text = "Remove";
+            removeBtn.onClick.AddListener(() =>
+            {
+                friendsManager.DeleteFriend(rel.Member.Id);
+                PopulateAllLists();
             });
         }
     }
 
-    private void RefreshIncoming()
+    private void PopulateIncomingList()
     {
-        foreach (Transform child in incomingContainer)
-            Destroy(child.gameObject);
-
         foreach (Relationship rel in FriendsService.Instance.IncomingFriendRequests)
         {
-            GameObject entry = Instantiate(requestEntryPrefab, incomingContainer);
+            GameObject entry = Instantiate(friendEntryPrefab, incomingListContainer);
+            
+            entry.transform.Find("PlayerNameText").GetComponent<TMP_Text>().text = rel.Member.Id;
+            entry.transform.Find("AvailabilityText").GetComponent<TMP_Text>().text = "Incoming Request";
 
-            TMP_Text nameText = entry.transform.Find("FriendName").GetComponent<TMP_Text>();
-            Button acceptBtn = entry.transform.Find("AcceptButton").GetComponent<Button>();
-            Button rejectBtn = entry.transform.Find("RejectButton").GetComponent<Button>();
+            Button acceptBtn = entry.transform.Find("ActionButton1").GetComponent<Button>();
+            Button rejectBtn = entry.transform.Find("ActionButton2").GetComponent<Button>();
 
-            string id = rel.Member.Id;
-            nameText.text = id;
-
-            acceptBtn.onClick.AddListener(() => {
-                friendsManager.AcceptFriendRequest(id);
-                RefreshAll();
+            acceptBtn.GetComponentInChildren<TMP_Text>().text = "Accept";
+            acceptBtn.onClick.AddListener(() =>
+            {
+                friendsManager.SendFriendRequest(rel.Member.Id); 
+                PopulateAllLists();
             });
-            rejectBtn.onClick.AddListener(() => {
-                friendsManager.DeleteIncomingRequest(id);
-                RefreshAll();
+
+            rejectBtn.GetComponentInChildren<TMP_Text>().text = "Reject";
+            rejectBtn.onClick.AddListener(() =>
+            {
+                friendsManager.DeleteIncomingRequest(rel.Member.Id);
+                PopulateAllLists();
             });
         }
+    }
+
+    private void PopulateOutgoingList()
+    {
+        foreach (Relationship rel in FriendsService.Instance.OutgoingFriendRequests)
+        {
+            GameObject entry = Instantiate(friendEntryPrefab, outgoingListContainer);
+
+            entry.transform.Find("PlayerNameText").GetComponent<TMP_Text>().text = rel.Member.Id;
+            entry.transform.Find("AvailabilityText").GetComponent<TMP_Text>().text = "Outgoing Request";
+
+            Button cancelBtn = entry.transform.Find("ActionButton1").GetComponent<Button>();
+            cancelBtn.GetComponentInChildren<TMP_Text>().text = "Cancel";
+            cancelBtn.onClick.AddListener(() =>
+            {
+                friendsManager.DeleteOutgoingRequest(rel.Member.Id);
+                PopulateAllLists();
+            });
+
+            entry.transform.Find("ActionButton2").gameObject.SetActive(false);
+        }
+    }
+
+    private void PopulateBlocksList()
+    {
+        foreach (Relationship rel in FriendsService.Instance.Blocks)
+        {
+            GameObject entry = Instantiate(friendEntryPrefab, blocksListContainer);
+
+            entry.transform.Find("PlayerNameText").GetComponent<TMP_Text>().text = rel.Member.Id;
+            entry.transform.Find("AvailabilityText").GetComponent<TMP_Text>().text = "Blocked";
+
+            Button unblockBtn = entry.transform.Find("ActionButton1").GetComponent<Button>();
+            unblockBtn.GetComponentInChildren<TMP_Text>().text = "Unblock";
+            unblockBtn.onClick.AddListener(() =>
+            {
+                friendsManager.UnblockUser(rel.Member.Id);
+                PopulateAllLists();
+            });
+
+            entry.transform.Find("ActionButton2").gameObject.SetActive(false);
+        }
+    }
+
+    private void Clear(Transform container)
+    {
+        foreach (Transform c in container)
+            Destroy(c.gameObject);
     }
 }

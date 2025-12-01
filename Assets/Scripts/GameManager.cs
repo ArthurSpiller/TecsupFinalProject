@@ -43,6 +43,7 @@ public class GameManager : MonoBehaviour
 
         if (exteriorManager && interiorManager) {
             interiorManager.RegisterExteriorManager(exteriorManager);
+            exteriorManager.RegisterInteriorManager(interiorManager);
             Debug.Log("Linked Interior and Exterior managers.");
         } else {
             Debug.LogError("Could not find one of the scene managers!");
