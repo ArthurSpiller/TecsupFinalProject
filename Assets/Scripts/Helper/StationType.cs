@@ -4,6 +4,7 @@ public enum StationType
     Movement,
     Firing,
     Lookout,
+    Reload,
     Repair,
     Resource
 }

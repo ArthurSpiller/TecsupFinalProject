@@ -42,18 +42,16 @@ public class PlayerStationHandler : MonoBehaviour
 
         playerBody.SetActive(false);
         isoCamera.enabled = false;
-
-        if (station.stationCamera)
-            station.stationCamera.enabled = true;
+        station.stationCamera.enabled = true;
 
         if (station.stationType == StationType.Movement) {
             GameManager.Instance.exteriorManager.SetMachineControl(true);
         } else if (station.stationType == StationType.Firing) {
             GameManager.Instance.exteriorManager.SetMachineFiring(true);
-            print("jaj");
         } else if (station.stationType == StationType.Lookout) {
             GameManager.Instance.exteriorManager.SetMachineLookout(true);
-            print("joj");
+        } else if (station.stationType == StationType.Reload) {
+            GameManager.Instance.exteriorManager.SetReloadActive(true);
         }
     }
 
@@ -66,12 +64,12 @@ public class PlayerStationHandler : MonoBehaviour
                 GameManager.Instance.exteriorManager.SetMachineControl(false);
             } else if (currentStation.stationType == StationType.Firing) {
                 GameManager.Instance.exteriorManager.SetMachineFiring(false);
-                print("!jaj");
             } else if (currentStation.stationType == StationType.Lookout) {
                 GameManager.Instance.exteriorManager.SetMachineLookout(false);
-                print("!joj");
+            } else if (currentStation.stationType == StationType.Reload) {
+                GameManager.Instance.exteriorManager.SetReloadActive(false);
             }
-            
+
             currentStation.Release();
             currentStation = null;
         }

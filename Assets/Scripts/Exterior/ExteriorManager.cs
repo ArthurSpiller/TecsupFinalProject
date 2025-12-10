@@ -8,11 +8,13 @@ public class ExteriorManager : MonoBehaviour
     public Camera movementCam;
     public Camera firingCam;
     public Camera lookoutCam;
+    public Camera reloadCam;
 
     [Header("Controllers")]
     public MachineMovementController machineMovementController;
     public MachineFiringController machineFiringController;
     public MachineLookoutController machineLookoutController;
+    public MachineReloadController machineReloadController;
 
     public void RegisterInteriorManager(InteriorManager intMgr) {
         interiorManager = intMgr;
@@ -20,12 +22,12 @@ public class ExteriorManager : MonoBehaviour
 
     public Camera GetCameraForStation(StationType type)
     {
-        switch (type)
-        {
-            case StationType.Movement: return movementCam;
-            case StationType.Firing:   return firingCam;
-            case StationType.Lookout:  return lookoutCam;
-            default: return null;
+        switch (type) {
+        case StationType.Movement: return movementCam;
+        case StationType.Firing:   return firingCam;
+        case StationType.Lookout:  return lookoutCam;
+        case StationType.Reload:   return reloadCam;
+        default: return null;
         }
     }
 
@@ -40,5 +42,9 @@ public class ExteriorManager : MonoBehaviour
 
     public void SetMachineLookout(bool active) {
         machineLookoutController.SetActive(active);
+    }
+
+    public void SetReloadActive(bool active) {
+        machineReloadController.SetActive(active);
     }
 }
