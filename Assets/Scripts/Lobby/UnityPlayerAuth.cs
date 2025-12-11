@@ -14,7 +14,7 @@ public class UnityPlayerAuth : MonoBehaviour
     public event Action<String> OnUpdateName;
 
     private PlayerInfo playerInfo;
-   
+
     private async void Start()
     {
         await UnityServices.InitializeAsync();
@@ -67,7 +67,7 @@ public class UnityPlayerAuth : MonoBehaviour
             playerInfo = AuthenticationService.Instance.PlayerInfo;
             var name = await AuthenticationService.Instance.GetPlayerNameAsync();
             OnSignedIn?.Invoke(playerInfo, name);
-            Debug.Log("Sign In Successful ");
+            Debug.Log("Sign In Successful : " + name);
         } catch (AuthenticationException ex) {
             Debug.LogException(ex);
         } catch(RequestFailedException ex){
